@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Meme Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f0e8;
+    --yellow: #ffe135;
+    --red: #ff3b30;
+    --gray: #1a1a1a;
+    --mid: #2d2d2d;
+    --muted: #888;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 2px solid var(--yellow);
+    position: sticky;
+    top: 0;
+    background: var(--black);
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    letter-spacing: 2px;
+    color: var(--yellow);
+    line-height: 1;
+  }
+  .logo span { color: var(--white); }
+  .tagline {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 80px);
+  }
+
+  /* ── LEFT PANEL ── */
+  .panel-left {
+    padding: 48px 40px;
+    border-right: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  /* Upload Zone */
+  .upload-zone {
+    border: 2px dashed #333;
+    border-radius: 4px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: #0f0f0f;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--yellow);
+    background: #141400;
+  }
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .upload-zone h3 {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  .upload-zone p {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .upload-preview {
+    width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 2px;
+    display: none;
+  }
+
+  /* Style selector */
+  .style-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .style-btn {
+    padding: 14px 8px;
+    border: 2px solid #333;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .style-btn .emoji { font-size: 1.4rem; }
+  .style-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+  .style-btn.active {
+    border-color: var(--yellow);
+    background: var(--yellow);
+    color: var(--black);
+  }
+
+  /* Position controls */
+  .position-row {
+    display: flex;
+    gap: 10px;
+  }
+  .pos-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #333;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .pos-btn.active { border-color: var(--white); color: var(--white); background: #1a1a1a; }
+  .pos-btn:hover { border-color: var(--white); color: var(--white); }
+
+  /* Generate Button */
+  .btn-generate {
+    width: 100%;
+    padding: 18px;
+    background: var(--yellow);
+    color: var(--black);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-generate:hover:not(:disabled) { background: #ffd000; transform: translateY(-1px); }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-generate .spinner {
+    display: none;
+    width: 20px; height: 20px;
+    border: 3px solid rgba(0,0,0,0.3);
+    border-top-color: var(--black);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  .btn-generate.loading .btn-text { display: none; }
+  .btn-generate.loading .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RIGHT PANEL ── */
+  .panel-right {
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .meme-stage {
+    flex: 1;
+    min-height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f0f0f;
+    border: 1px solid #222;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stage-placeholder {
+    text-align: center;
+    color: #444;
+  }
+  .stage-placeholder .big-icon { font-size: 4rem; margin-bottom: 12px; display: block; }
+  .stage-placeholder p { font-size: 0.85rem; line-height: 1.6; }
+
+  /* Meme canvas area */
+  #meme-canvas-wrapper {
+    position: relative;
+    display: none;
+    width: 100%;
+    height: 100%;
+    min-height: 380px;
+  }
+  #meme-canvas-wrapper img.meme-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 420px;
+  }
+  .meme-text-overlay {
+    position: absolute;
+    left: 0; right: 0;
+    padding: 12px 16px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.2rem, 3.5vw, 2rem);
+    color: white;
+    text-shadow:
+      -2px -2px 0 #000,
+       2px -2px 0 #000,
+      -2px  2px 0 #000,
+       2px  2px 0 #000,
+       0    3px 6px rgba(0,0,0,0.8);
+    letter-spacing: 1.5px;
+    line-height: 1.2;
+    word-break: break-word;
+    pointer-events: none;
+  }
+  .meme-text-overlay.top { top: 0; }
+  .meme-text-overlay.bottom { bottom: 0; }
+  .meme-text-overlay.both-top { top: 0; }
+  .meme-text-overlay.both-bottom { bottom: 0; }
+
+  /* Caption box */
+  .caption-box {
+    background: #0f0f0f;
+    border: 1px solid #222;
+    border-radius: 4px;
+    padding: 20px;
+    display: none;
+  }
+  .caption-box.visible { display: block; }
+  .caption-box .cb-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .caption-text {
+    font-size: 0.95rem;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--white);
+    font-style: italic;
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: none;
+    gap: 10px;
+  }
+  .action-bar.visible { display: flex; }
+  .btn-action {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #333;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .btn-action:hover { border-color: var(--white); background: #1a1a1a; }
+  .btn-action.primary { background: var(--white); color: var(--black); border-color: var(--white); }
+  .btn-action.primary:hover { background: var(--yellow); border-color: var(--yellow); }
+
+  /* Error toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--red);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    z-index: 999;
+    max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Ticker */
+  .ticker {
+    border-top: 1px solid #222;
+    padding: 10px 40px;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #444;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 20s linear infinite;
+  }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    main { grid-template-columns: 1fr; }
+    .panel-left { border-right: none; border-bottom: 1px solid #222; padding: 32px 24px; }
+    .panel-right { padding: 32px 24px; }
+    header { padding: 16px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">AI <span>Meme</span> Lab</div>
+  </div>
+  <div class="tagline">Powered by Claude Vision</div>
+</header>
+
+<main>
+  <!-- LEFT: Controls -->
+  <div class="panel-left">
+
+    <!-- Step 1: Upload -->
+    <div>
+      <span class="section-label">01 — Upload Image</span>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="imageInput" accept="image/*" />
+        <span class="upload-icon" id="uploadIcon">🖼️</span>
+        <img class="upload-preview" id="uploadPreview" alt="preview" />
+        <h3 id="uploadTitle">Drop image here</h3>
+        <p id="uploadSub">or click to browse · JPG, PNG, GIF, WEBP</p>
+      </div>
+    </div>
+
+    <!-- Step 2: Style -->
+    <div>
+      <span class="section-label">02 — Humor Style</span>
+      <div class="style-grid">
+        <button class="style-btn active" data-style="Sarcastic">
+          <span class="emoji">😏</span> Sarcastic
+        </button>
+        <button class="style-btn" data-style="Dark">
+          <span class="emoji">💀</span> Dark
+        </button>
+        <button class="style-btn" data-style="Wholesome">
+          <span class="emoji">🌻</span> Wholesome
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Caption Position -->
+    <div>
+      <span class="section-label">03 — Caption Position</span>
+      <div class="position-row">
+        <button class="pos-btn active" data-pos="bottom">Bottom</button>
+        <button class="pos-btn" data-pos="top">Top</button>
+        <button class="pos-btn" data-pos="both">Top + Bottom</button>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <button class="btn-generate" id="generateBtn" disabled>
+      <span class="btn-text">⚡ GENERATE MEME</span>
+      <div class="spinner"></div>
+    </button>
+
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div class="panel-right">
+    <span class="section-label">04 — Meme Preview</span>
+
+    <div class="meme-stage" id="memeStage">
+      <div class="stage-placeholder" id="stagePlaceholder">
+        <span class="big-icon">🎭</span>
+        <p>Upload an image<br />and hit Generate</p>
+      </div>
+
+      <div id="meme-canvas-wrapper">
+        <img class="meme-img" id="memeImage" src="" alt="meme" />
+        <div class="meme-text-overlay top" id="topText"></div>
+        <div class="meme-text-overlay bottom" id="bottomText"></div>
+      </div>
+    </div>
+
+    <div class="caption-box" id="captionBox">
+      <span class="cb-label">Generated Caption</span>
+      <div class="caption-text" id="captionText"></div>
+    </div>
+
+    <div class="action-bar" id="actionBar">
+      <button class="btn-action" id="regenerateBtn">↺ Regenerate</button>
+      <button class="btn-action primary" id="downloadBtn">⬇ Download Meme</button>
+    </div>
+
+  </div>
+</main>
+
+<div class="ticker">
+  <span class="ticker-inner">
+    AI MEME LAB &nbsp;·&nbsp; SARCASTIC &nbsp;·&nbsp; DARK HUMOR &nbsp;·&nbsp; WHOLESOME VIBES &nbsp;·&nbsp; POWERED BY CLAUDE &nbsp;·&nbsp;
+    AI MEME LAB &nbsp;·&nbsp; SARCASTIC &nbsp;·&nbsp; DARK HUMOR &nbsp;·&nbsp; WHOLESOME VIBES &nbsp;·&nbsp; POWERED BY CLAUDE &nbsp;·&nbsp;
+  </span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── State ──
+  let imageFile = null;
+  let imageDataURL = null;
+  let selectedStyle = 'Sarcastic';
+  let selectedPos = 'bottom';
+  let lastCaption = null;
+
+  // ── Elements ──
+  const imageInput = document.getElementById('imageInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const uploadIcon = document.getElementById('uploadIcon');
+  const uploadTitle = document.getElementById('uploadTitle');
+  const uploadSub = document.getElementById('uploadSub');
+  const generateBtn = document.getElementById('generateBtn');
+  const regenerateBtn = document.getElementById('regenerateBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const stagePlaceholder = document.getElementById('stagePlaceholder');
+  const memeWrapper = document.getElementById('meme-canvas-wrapper');
+  const memeImage = document.getElementById('memeImage');
+  const topText = document.getElementById('topText');
+  const bottomText = document.getElementById('bottomText');
+  const captionBox = document.getElementById('captionBox');
+  const captionText = document.getElementById('captionText');
+  const actionBar = document.getElementById('actionBar');
+  const toast = document.getElementById('toast');
+
+  // ── Image Upload ──
+  imageInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) loadImage(file);
+  });
+
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadImage(file);
+  });
+
+  function loadImage(file) {
+    imageFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      imageDataURL = ev.target.result;
+      uploadPreview.src = imageDataURL;
+      uploadPreview.style.display = 'block';
+      uploadIcon.style.display = 'none';
+      uploadTitle.textContent = file.name;
+      uploadSub.textContent = (file.size / 1024).toFixed(0) + ' KB';
+      generateBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Style Buttons ──
+  document.querySelectorAll('.style-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedStyle = btn.dataset.style;
+    });
+  });
+
+  // ── Position Buttons ──
+  document.querySelectorAll('.pos-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedPos = btn.dataset.pos;
+      if (lastCaption) applyCaption(lastCaption);
+    });
+  });
+
+  // ── Generate ──
+  generateBtn.addEventListener('click', generate);
+  regenerateBtn.addEventListener('click', generate);
+
+  async function generate() {
+    if (!imageDataURL) return;
+
+    setLoading(true);
+
+    try {
+      const base64 = imageDataURL.split(',')[1];
+      const mediaType = imageFile.type || 'image/jpeg';
+
+      const styleGuide = {
+        'Sarcastic': 'Dry, witty, deadpan sarcasm. Think "this is fine" energy. Classic internet irony.',
+        'Dark':      'Dark, absurdist, slightly nihilistic but funny — NOT offensive or harmful. Think existential comedy.',
+        'Wholesome': 'Warm, uplifting, heartfelt. The kind of meme that makes you smile or feel seen.'
+      };
+
+      const posGuide = selectedPos === 'both'
+        ? 'Return TWO lines separated by " | ": TOP_TEXT | BOTTOM_TEXT. Top text sets up; bottom text delivers the punchline.'
+        : `Return a single short caption for the ${selectedPos} of the meme.`;
+
+      const prompt = `You are a meme caption generator with expert internet humor.
+
+Analyze this image carefully — objects, expressions, context, situation.
+Then write a viral meme caption in the following style:
+
+Style: ${selectedStyle}
+Style notes: ${styleGuide[selectedStyle]}
+
+Format: ${posGuide}
+
+Rules:
+- Maximum 8 words per line
+- ALL CAPS feels authentic for memes but you can use mixed case for effect
+- No hashtags, no emojis, no quotation marks in your response
+- Just return the caption text and nothing else
+- Be specific to what's actually in the image`;
+
+      const GEMINI_API_KEY = 'AIzaSyDViszGFBbjXJp8dZPNgQpoaEhrrilsKSM';
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: mediaType, data: base64 } },
+                { text: prompt }
+              ]
+            }],
+            generationConfig: { maxOutputTokens: 150, temperature: 1.0 }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'Gemini API error');
+      }
+
+      const data = await response.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      lastCaption = raw;
+      applyCaption(raw);
+
+    } catch (err) {
+      showToast('Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function applyCaption(raw) {
+    // Show meme
+    stagePlaceholder.style.display = 'none';
+    memeWrapper.style.display = 'block';
+    memeImage.src = imageDataURL;
+
+    // Parse caption
+    const parts = raw.split('|').map(s => s.trim());
+    const top = parts.length > 1 ? parts[0] : '';
+    const bottom = parts.length > 1 ? parts[1] : parts[0];
+
+    // Apply based on position
+    if (selectedPos === 'top') {
+      topText.textContent = bottom;
+      bottomText.textContent = '';
+    } else if (selectedPos === 'bottom') {
+      topText.textContent = '';
+      bottomText.textContent = parts.length > 1 ? bottom : raw;
+    } else {
+      // both
+      topText.textContent = top || raw.split(' ').slice(0, Math.ceil(raw.split(' ').length / 2)).join(' ');
+      bottomText.textContent = bottom;
+    }
+
+    // Caption box
+    captionBox.classList.add('visible');
+    captionText.textContent = '"' + raw.replace('|', '—') + '"';
+
+    // Actions
+    actionBar.classList.add('visible');
+  }
+
+  // ── Download ──
+  downloadBtn.addEventListener('click', async () => {
+    if (!imageDataURL || !lastCaption) return;
+
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const parts = lastCaption.split('|').map(s => s.trim());
+      const top = parts.length > 1 ? parts[0] : '';
+      const bottom = parts.length > 1 ? parts[1] : parts[0];
+
+      const fontSize = Math.max(32, Math.floor(img.width / 14));
+      ctx.font = `${fontSize}px 'Bebas Neue', Impact, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'white';
+
+      function drawText(text, y) {
+        if (!text) return;
+        ctx.lineWidth = fontSize / 8;
+        ctx.strokeStyle = 'black';
+        ctx.strokeText(text, canvas.width / 2, y);
+        ctx.fillText(text, canvas.width / 2, y);
+      }
+
+      if (selectedPos === 'top') {
+        drawText(bottom, fontSize * 1.2);
+      } else if (selectedPos === 'bottom') {
+        drawText(bottom, canvas.height - fontSize * 0.4);
+      } else {
+        drawText(top, fontSize * 1.2);
+        drawText(bottom, canvas.height - fontSize * 0.4);
+      }
+
+      const link = document.createElement('a');
+      link.download = 'meme.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.src = imageDataURL;
+  });
+
+  // ── Helpers ──
+  function setLoading(on) {
+    generateBtn.disabled = on;
+    generateBtn.classList.toggle('loading', on);
+    regenerateBtn.disabled = on;
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+</script>
+</body>
+</html>
